@@ -14,13 +14,10 @@ bkg.drawRect(0, 0, 600, 600);
 // bkg.endFill();
 mainStage.addChild(bkg);//..now add the dummy object
 app.stage.addChild(mainStage);
-// console.log(mainStage.width);
-// console.log(mainStage.height);
 
 //Define any variables that are used in more than one function. For some reason this does not create global variables, checked by curlybrace scope check
 let cat, redBox, wall, rows=28, cols=28, maxRooms=10, roomSizeRange=[4,8];
 let wallsArr = createDungeon();
-// let wallsArr = [];//dummy
 const wallWidth = mainStage.width/cols;
 const wallHeight = mainStage.height/rows;
 console.log('wallsArr: ',wallsArr);
@@ -217,7 +214,6 @@ function setup(loader, resources) {
       }
     });
   });
-  
 
   // make sprites from textures in cache, and make primitives
   cat = new PIXI.Sprite(resources.cat.texture);
@@ -256,7 +252,6 @@ document.addEventListener('keydown', event => {
       case 40: directions.down = true;
       //children on stage array check via spacebar, comment below for production
       // break;
-      // case 32: console.log(app.stage.children,cat.x,cat.y);
       // case 32: console.log(mainStage.children.length);
     }
   }
