@@ -1,9 +1,7 @@
 class Bump {
   constructor(renderingEngine = PIXI) {
     if (renderingEngine === undefined) throw new Error("Please assign a rendering engine in the constructor before using bump.js"); 
-
     this.renderer = "pixi";
-  
   }
 
   //`addCollisionProperties` adds extra properties to sprites to help
@@ -100,55 +98,6 @@ class Bump {
         });
       }
 
-      //Earlier code - not needed now.
-      /*
-      Object.defineProperties(sprite, {
-        "gx": {
-          get(){return sprite.getGlobalPosition().x},
-          enumerable: true, configurable: true
-        },
-        "gy": {
-          get(){return sprite.getGlobalPosition().y},
-          enumerable: true, configurable: true
-        },
-        "centerX": {
-          get(){return sprite.x + sprite.width / 2},
-          enumerable: true, configurable: true
-        },
-        "centerY": {
-          get(){return sprite.y + sprite.height / 2},
-          enumerable: true, configurable: true
-        },
-        "halfWidth": {
-          get(){return sprite.width / 2},
-          enumerable: true, configurable: true
-        },
-        "halfHeight": {
-          get(){return sprite.height / 2},
-          enumerable: true, configurable: true
-        },
-        "xAnchorOffset": {
-          get(){
-            if (sprite.anchor !== undefined) {
-              return sprite.height * sprite.anchor.x;
-            } else {
-              return 0;
-            }
-          },
-          enumerable: true, configurable: true
-        },
-        "yAnchorOffset": {
-          get(){
-            if (sprite.anchor !== undefined) {
-              return sprite.width * sprite.anchor.y;
-            } else {
-              return 0;
-            }
-          },
-          enumerable: true, configurable: true
-        }
-      });
-      */
     }
 
     //Add a Boolean `_bumpPropertiesAdded` property to the sprite to flag it
@@ -534,42 +483,37 @@ class Bump {
   */
 
   rectangleCollision(
-    r1, r2, bounce = false, global = true
+    // r1, r2, bounce = false, global = true
+    r1, r2, global = true
   ) {
-
     //Add collision properties
     if (!r1._bumpPropertiesAdded) this.addCollisionProperties(r1);
     if (!r2._bumpPropertiesAdded) this.addCollisionProperties(r2);
 
-    let collision, combinedHalfWidths, combinedHalfHeights,
-      overlapX, overlapY, vx, vy;
-
+    let collision, combinedHalfWidths, combinedHalfHeights, overlapX, overlapY, vx, vy, Avx, Avy;
     //Calculate the distance vector
-    if (global) {
-      vx = (r1.gx + Math.abs(r1.halfWidth) - r1.xAnchorOffset) - (r2.gx + Math.abs(r2.halfWidth) - r2.xAnchorOffset);
-      vy = (r1.gy + Math.abs(r1.halfHeight) - r1.yAnchorOffset) - (r2.gy + Math.abs(r2.halfHeight) - r2.yAnchorOffset);
-    } else {
-      //vx = r1.centerX - r2.centerX;
-      //vy = r1.centerY - r2.centerY;
-      vx = (r1.x + Math.abs(r1.halfWidth) - r1.xAnchorOffset) - (r2.x + Math.abs(r2.halfWidth) - r2.xAnchorOffset);
-      vy = (r1.y + Math.abs(r1.halfHeight) - r1.yAnchorOffset) - (r2.y + Math.abs(r2.halfHeight) - r2.yAnchorOffset);
-    }
+    vx = (r1.gx + r1.halfWidth - r1.xAnchorOffset) - (r2.gx + r2.halfWidth - r2.xAnchorOffset);
+    vy = (r1.gy + r1.halfHeight - r1.yAnchorOffset) - (r2.gy + r2.halfHeight - r2.yAnchorOffset);
+    Avx = Math.abs( (r1.gx + r1.halfWidth - r1.xAnchorOffset) - (r2.gx + r2.halfWidth - r2.xAnchorOffset) );
+    Avy = Math.abs( (r1.gy + r1.halfHeight - r1.yAnchorOffset) - (r2.gy + r2.halfHeight - r2.yAnchorOffset) );
 
     //Figure out the combined half-widths and half-heights
-    combinedHalfWidths = Math.abs(r1.halfWidth) + Math.abs(r2.halfWidth);
-    combinedHalfHeights = Math.abs(r1.halfHeight) + Math.abs(r2.halfHeight);
+    // combinedHalfWidths = Math.abs(r1.halfWidth) + Math.abs(r2.halfWidth);
+    // combinedHalfHeights = Math.abs(r1.halfHeight) + Math.abs(r2.halfHeight);
+    combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+    combinedHalfHeights = r1.halfHeight + r2.halfHeight;
 
     //Check whether vx is less than the combined half widths
-    if (Math.abs(vx) < combinedHalfWidths) {
+    if ( Avx < combinedHalfWidths) {
 
       //A collision might be occurring!
       //Check whether vy is less than the combined half heights
-      if (Math.abs(vy) < combinedHalfHeights) {
+      if ( Avy < combinedHalfHeights) {
 
         //A collision has occurred! This is good!
         //Find out the size of the overlap on both the X and Y axes
-        overlapX = combinedHalfWidths - Math.abs(vx);
-        overlapY = combinedHalfHeights - Math.abs(vy);
+        overlapX = combinedHalfWidths - Avx;
+        overlapY = combinedHalfHeights - Avy;
 
         //The collision has occurred on the axis with the
         //*smallest* amount of overlap. Let's figure out which
@@ -580,70 +524,37 @@ class Bump {
           //But on which side? vy can tell us
 
           if (vy > 0) {
-            collision = "top";
+            // collision = "top";
             //Move the rectangle out of the collision
             r1.y = r1.y + overlapY;
           } else {
-            collision = "bottom";
+            // collision = "bottom";
             //Move the rectangle out of the collision
             r1.y = r1.y - overlapY;
-          }
-
-          //Bounce
-          if (bounce) {
-            r1.vy *= -1;
-
-            /*Alternative
-            //Find the bounce surface's vx and vy properties
-            var s = {};
-            s.vx = r2.x - r2.x + r2.width;
-            s.vy = 0;
-
-            //Bounce r1 off the surface
-            //this.bounceOffSurface(r1, s);
-            */
-
           }
         } else {
           //The collision is happening on the Y axis
           //But on which side? vx can tell us
 
           if (vx > 0) {
-            collision = "left";
+            // collision = "left";
             //Move the rectangle out of the collision
             r1.x = r1.x + overlapX;
           } else {
-            collision = "right";
+            // collision = "right";
             //Move the rectangle out of the collision
             r1.x = r1.x - overlapX;
           }
 
-          //Bounce
-          if (bounce) {
-            r1.vx *= -1;
-
-            /*Alternative
-            //Find the bounce surface's vx and vy properties
-            var s = {};
-            s.vx = 0;
-            s.vy = r2.y - r2.y + r2.height;
-
-            //Bounce r1 off the surface
-            this.bounceOffSurface(r1, s);
-            */
-
-          }
         }
-      } else {
-        //No collision
+
       }
-    } else {
-      //No collision
+
     }
 
     //Return the collision string. it will be either "top", "right",
     //"bottom", or "left" depending on which side of r1 is touching r2.
-    return collision;
+    // return collision;
   }
 
   /*
@@ -1118,93 +1029,6 @@ class Bump {
   `collision` will be `undefined`. 
   */
 
- /*
-  contain(sprite, container, bounce = false, extra = undefined) {
-
-    //Helper methods that compensate for any possible shift the the
-    //sprites' anchor points
-    let nudgeAnchor = (o, value, axis) => {
-      if (o.anchor !== undefined) {
-        if (o.anchor[axis] !== 0) {
-          return value * ((1 - o.anchor[axis]) - o.anchor[axis]);
-        } else {
-          return value;
-        }
-      } else {
-        return value; 
-      }
-    };
-
-    let compensateForAnchor = (o, value, axis) => {
-      if (o.anchor !== undefined) {
-        if (o.anchor[axis] !== 0) {
-          return value * o.anchor[axis];
-        } else {
-          return 0;
-        }
-      } else {
-        return 0; 
-      }
-    };
-
-    let compensateForAnchors = (a, b, property1, property2) => {
-       return compensateForAnchor(a, a[property1], property2) + compensateForAnchor(b, b[property1], property2)
-    };    
-    //Create a set called `collision` to keep track of the
-    //boundaries with which the sprite is colliding
-    let collision = new Set();
-
-    //Left
-    if (sprite.x - compensateForAnchor(sprite, sprite.width, "x") < container.x - sprite.parent.gx - compensateForAnchor(container, container.width, "x")) {
-      //Bounce the sprite if `bounce` is true
-      if (bounce) sprite.vx *= -1;
-
-      //If the sprite has `mass`, let the mass
-      //affect the sprite's velocity
-      if(sprite.mass) sprite.vx /= sprite.mass;
-
-      //Keep the sprite inside the container
-      sprite.x = container.x - sprite.parent.gx + compensateForAnchor(sprite, sprite.width, "x") - compensateForAnchor(container, container.width, "x");
-
-      //Add "left" to the collision set
-      collision.add("left");
-    }
-
-    //Top
-    if (sprite.y - compensateForAnchor(sprite, sprite.height, "y") < container.y - sprite.parent.gy - compensateForAnchor(container, container.height, "y")) {
-      if (bounce) sprite.vy *= -1;
-      if(sprite.mass) sprite.vy /= sprite.mass;
-      sprite.y = container.x - sprite.parent.gy + compensateForAnchor(sprite, sprite.height, "y") - compensateForAnchor(container, container.height, "y");
-      collision.add("top");
-    }
-
-    //Right
-    if (sprite.x - compensateForAnchor(sprite, sprite.width, "x") + sprite.width > container.width - compensateForAnchor(container, container.width, "x")) {
-      if (bounce) sprite.vx *= -1;
-      if(sprite.mass) sprite.vx /= sprite.mass;
-      sprite.x = container.width - sprite.width + compensateForAnchor(sprite, sprite.width, "x") - compensateForAnchor(container, container.width, "x");
-      collision.add("right");
-    }
-
-    //Bottom
-    if (sprite.y - compensateForAnchor(sprite, sprite.height, "y") + sprite.height > container.height - compensateForAnchor(container, container.height, "y")) {
-      if (bounce) sprite.vy *= -1;
-      if(sprite.mass) sprite.vy /= sprite.mass;
-      sprite.y = container.height - sprite.height + compensateForAnchor(sprite, sprite.height, "y") - compensateForAnchor(container, container.height, "y");
-      collision.add("bottom");
-    }
-
-    //If there were no collisions, set `collision` to `undefined`
-    if (collision.size === 0) collision = undefined;
-
-    //The `extra` function runs if there was a collision
-    //and `extra` has been defined
-    if (collision && extra) extra(collision);
-
-    //Return the `collision` value
-    return collision;
-  }
-  */
   contain(sprite, container, bounce = false, extra = undefined) {
 
     //Add collision properties
