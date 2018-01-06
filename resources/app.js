@@ -265,8 +265,6 @@ PIXI.loader.add('cat', 'resources/cat.png') //give a name and provide url relati
 //
 
 function setup(loader, resources) {
-	//set viewlimiter to visible
-	// viewLimiter.visible = true;
 	// make sprites from textures in cache, and make primitives
   cat = new PIXI.Sprite(resources.cat.texture);
 	cat.iD = 'cat';//adding personal data to object
