@@ -2,6 +2,21 @@ html{
   font-size: 16px;
 }
 body{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-width: 800px;
   margin: 0;
-  background-color: rgb(219, 219, 219);
+  background-color: rgb(224, 255, 175);
+}
+
+#insertionPoint{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: rgb(101, 124, 0);
+}
+
+.creds{
+  font-family: Helvetica, Arial, sans-serif;
 }
